@@ -31,7 +31,7 @@ logs/
 *.duckdb.wal
 lakehouse/lake_data/
 lakehouse/catalog.ducklake
-
+lakehouse/
 # ── dbt ───────────────────────────────────────────────────────────────────────
 crypto_pipeline_dbt/target/
 crypto_pipeline_dbt/dbt_packages/
