@@ -5,17 +5,12 @@ import os
 from datetime import datetime, timezone
 from logger_config import setup_logger
 from dotenv import load_dotenv
-from utils.rabbitmq import get_connection, publish_message
+from utils.parquet_writer import write_parquet
 
 load_dotenv()
 logger = setup_logger()
 
 API_KEY = os.getenv("AVIATIONSTACK_API_KEY")
-RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
-RABBITMQ_USER = os.getenv("RABBITMQ_USER")
-RABBITMQ_PASS = os.getenv("RABBITMQ_PASS")
-
-QUEUE_NAME = "flights"
 BASE_URL = "http://api.aviationstack.com/v1/flights"
 
 AIRPORTS = [
@@ -28,10 +23,7 @@ AIRPORTS = [
     "DFW",  # Dallas Fort Worth
 ]
 
-async def fetch_flights(client: httpx.AsyncClient, iata: str, direction: str) -> list[dict]:
-    """
-    direction: 'arr' for arrivals, 'dep' for departures
-    """
+async def fetch_flights(client: httpx.AsyncClient, iata: str, direction: str):
     param_key = "arr_iata" if direction == "arr" else "dep_iata"
     params = {
         "access_key": API_KEY,
@@ -57,40 +49,31 @@ async def fetch_flights(client: httpx.AsyncClient, iata: str, direction: str) ->
         return []
 
 
-def enrich_flight(flight: dict, fetched_at: str) -> dict:
-    """Add pipeline metadata to each flight record."""
+def enrich_flight(flight: dict, fetched_at: str):
     return {
         **flight,
         "_fetched_at": fetched_at,
         "_source": "aviationstack",
     }
 
-
 async def run():
     logger.info("Starting AviationStack producer")
     fetched_at = datetime.now(timezone.utc).isoformat()
+    all_records = []
 
-    connection = await get_connection(RABBITMQ_HOST, RABBITMQ_USER, RABBITMQ_PASS)
-    async with connection:
-        channel = await connection.channel()
+    async with httpx.AsyncClient() as client:
+        for airport in AIRPORTS:
+            for direction in ["arr", "dep"]:
+                flights = await fetch_flights(client, airport, direction)
 
-        async with httpx.AsyncClient() as client:
-            for airport in AIRPORTS:
-                for direction in ["arr", "dep"]:
-                    flights = await fetch_flights(client, airport, direction)
+                for flight in flights:
+                    enriched = enrich_flight(flight, fetched_at)
+                    all_records.append(enriched)
+                    
+                await asyncio.sleep(1)
 
-                    for flight in flights:
-                        enriched = enrich_flight(flight, fetched_at)
-                        await publish_message(
-                            channel,
-                            QUEUE_NAME,
-                            json.dumps(enriched),
-                        )
-
-                    # Be respectful to the API — small delay between calls
-                    await asyncio.sleep(1)
-
-    logger.info("AviationStack producer finished")
+    write_parquet(all_records, "flights")
+    logger.info(f"AviationStack producer finished, {len(all_records)} records written.")
 
 
 if __name__ == "__main__":
