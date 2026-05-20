@@ -50,11 +50,15 @@ def enrich_position(state_vector: list, fetched_at: str):
     }
 
 async def fetch_positions(client: httpx.AsyncClient):
+    username = os.getenv("OPENSKY_USERNAME")
+    password = os.getenv("OPENSKY_PASSWORD")
+    auth = (username, password) if username and password else None
     try:
         response = await client.get(
             BASE_URL,
             params=BOUNDING_BOX,
             headers=HEADERS,
+            auth=auth,
             timeout=30,
         )
         response.raise_for_status()

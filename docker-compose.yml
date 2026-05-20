@@ -1,72 +1,48 @@
 services:
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: aviation_rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
   postgres:
     image: postgres:16
     container_name: aviation_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: airflow
+      POSTGRES_DB: prefect
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d airflow"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d prefect"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
 
-  airflow:
+  prefect:
     build:
       context: .
-      dockerfile: Dockerfile.airflow
-    container_name: aviation_airflow
-    command: standalone
+      dockerfile: Dockerfile.prefect
+    container_name: aviation_prefect
     ports:
-      - "8080:8080"
+      - "4200:4200"
     env_file: .env
     environment:
-      - AIRFLOW__CORE__LOAD_EXAMPLES=false
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
-      - PYTHONPATH=/opt/airflow/workspace/src
-      - POSTGRES_HOST=postgres
+      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/prefect
+      - PREFECT_SERVER_API_HOST=0.0.0.0
+      - PREFECT_UI_API_URL=http://localhost:4200/api
+      - PYTHONPATH=/app/src
     volumes:
-      - .:/opt/airflow/workspace
-      - ./airflow/dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
+      - .:/app
       - ./lakehouse:/lakehouse
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/version"]
+      test: ["CMD", "curl", "--fail", "http://localhost:4200/api/health"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 60s
 
   metabase:
     build:
@@ -84,6 +60,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  rabbitmq_data:
   postgres_data:
   metabase_data:
