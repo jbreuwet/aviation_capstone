@@ -63,3 +63,5 @@ desktop.ini
 *.swo
 
 dbname=ducklake user=admin password=admin123 host=localhost port=5432
+C:\DE2\aviation_capstone\aviation_capstone\dbname=ducklake user=admin password=capstone817 host=localhost port=5432
+dbname=ducklake user=admin password=capstone817 host=localhost port=5432
