@@ -1,0 +1,1 @@
+SELECT * FROM read_parquet('C:/DE2/aviation_capstone/aviation_capstone/evidence/sources/aviation/main/mart_weather_impact/*.parquet')

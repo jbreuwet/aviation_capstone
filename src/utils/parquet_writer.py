@@ -13,19 +13,22 @@ logger = setup_logger()
 
 LAKEHOUSE_PATH = Path("lakehouse")
 
-R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME")
-R2_ENDPOINT_URL = os.getenv("R2_ENDPOINT_URL")
-R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
-R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
+R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "").strip("'").strip('"')
+R2_ENDPOINT_URL = os.getenv("R2_ENDPOINT_URL", "").strip("'").strip('"')
+R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID", "").strip("'").strip('"')
+R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY", "").strip("'").strip('"')
 
 USE_R2 = all([R2_BUCKET_NAME, R2_ENDPOINT_URL, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY])
 
 def get_r2_client():
+    endpoint = R2_ENDPOINT_URL
+    if not endpoint.startswith("https://"):
+        endpoint = f"https://{endpoint}"
     return boto3.client(
         "s3",
-        endpoint_url=R2_ENDPOINT_URL,
-        aws_access_key_id=R2_ACCESS_KEY_ID,
-        aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+        endpoint_url=endpoint,
+        aws_access_key_id=R2_ACCESS_KEY_ID.strip("'").strip('"'),
+        aws_secret_access_key=R2_SECRET_ACCESS_KEY.strip("'").strip('"'),
         region_name="auto",
     )
 

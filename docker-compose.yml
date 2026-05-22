@@ -44,21 +44,5 @@ services:
       retries: 5
       start_period: 60s
 
-  metabase:
-    build:
-      context: .
-      dockerfile: Dockerfile.metabase
-    container_name: aviation_metabase
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./lakehouse:/lakehouse
-      - metabase_data:/metabase-data
-    environment:
-      MB_DB_TYPE: h2
-      MB_DB_FILE: /metabase-data/metabase.db
-    restart: unless-stopped
-
 volumes:
   postgres_data:
-  metabase_data:

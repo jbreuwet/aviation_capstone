@@ -1,4 +1,5 @@
 # src/flows/pipeline_flow.py
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -16,7 +17,7 @@ def run_aviationstack():
     result = subprocess.run(
         [sys.executable, str(SRC_PATH / "ingestion" / "aviationstack_ingestion.py")],
         capture_output=True, text=True,
-        env={**__import__("os").environ, "PYTHONPATH": str(SRC_PATH)},
+        env={**os.environ, "PYTHONPATH": str(SRC_PATH)},
     )
     if result.returncode != 0:
         raise RuntimeError(f"AviationStack ingestion failed:\n{result.stderr}")
@@ -30,7 +31,7 @@ def run_opensky():
     result = subprocess.run(
         [sys.executable, str(SRC_PATH / "ingestion" / "opensky_ingestion.py")],
         capture_output=True, text=True,
-        env={**__import__("os").environ, "PYTHONPATH": str(SRC_PATH)},
+        env={**os.environ, "PYTHONPATH": str(SRC_PATH)},
     )
     if result.returncode != 0:
         raise RuntimeError(f"OpenSky ingestion failed:\n{result.stderr}")
@@ -44,7 +45,7 @@ def run_noaa():
     result = subprocess.run(
         [sys.executable, str(SRC_PATH / "ingestion" / "noaa_ingestion.py")],
         capture_output=True, text=True,
-        env={**__import__("os").environ, "PYTHONPATH": str(SRC_PATH)},
+        env={**os.environ, "PYTHONPATH": str(SRC_PATH)},
     )
     if result.returncode != 0:
         raise RuntimeError(f"NOAA ingestion failed:\n{result.stderr}")
@@ -59,6 +60,7 @@ def run_dbt():
         ["dbt", "run", "--profiles-dir", "."],
         capture_output=True, text=True,
         cwd=str(PROJECT_ROOT / "dbt"),
+        env={**os.environ},
     )
     if result.returncode != 0:
         raise RuntimeError(f"dbt run failed:\n{result.stderr}")
@@ -73,17 +75,32 @@ def run_dbt_test():
         ["dbt", "test", "--profiles-dir", "."],
         capture_output=True, text=True,
         cwd=str(PROJECT_ROOT / "dbt"),
+        env={**os.environ},
     )
     if result.returncode != 0:
         raise RuntimeError(f"dbt test failed:\n{result.stderr}")
+    logger.info(result.stdout)
+
+@task(name="ducklake-export", retries=1, retry_delay_seconds=30)
+def run_ducklake_export():
+    logger = get_run_logger()
+    logger.info("Running DuckLake export")
+    result = subprocess.run(
+        [sys.executable, str(SRC_PATH / "utils" / "ducklake_export.py")],
+        capture_output=True, text=True,
+        env={**os.environ, "PYTHONPATH": str(SRC_PATH)},
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"DuckLake export failed:\n{result.stderr}")
     logger.info(result.stdout)
 
 
 @flow(name="ingest-aviationstack", log_prints=True)
 def aviationstack_flow():
     run_aviationstack()
-    #run_dbt()
-    #run_dbt_test()
+    run_dbt()
+    run_dbt_test()
+    run_ducklake_export()
 
 
 @flow(name="ingest-opensky", log_prints=True)
