@@ -1,14 +1,13 @@
 -- models/marts/mart_weather_impact.sql
 {{ config(
     materialized='external',
-    location='s3://{{ env_var("R2_BUCKET_NAME") }}/marts/weather_impact',
+    location='s3://aviation-lakehouse/marts/weather_impact',
     format='parquet'
 ) }}
 
 with base as (
     select
         arr_iata                            as airport_iata,
-        arr_airport                         as airport_name,
         flight_date,
         arr_flight_category                 as flight_category,
         arr_visibility                      as visibility,
@@ -26,7 +25,6 @@ with base as (
 
 select
     airport_iata,
-    airport_name,
     flight_date,
     flight_category,
     visibility,

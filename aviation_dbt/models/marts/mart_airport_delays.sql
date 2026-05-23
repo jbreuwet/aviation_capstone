@@ -1,7 +1,7 @@
 -- models/marts/mart_airport_delays.sql
 {{ config(
     materialized='external',
-    location='s3://{{ env_var("R2_BUCKET_NAME") }}/marts/airport_delays',
+    location='s3://aviation-lakehouse/marts/airport_delays',
     format='parquet'
 ) }}
 
@@ -11,11 +11,8 @@ with flights as (
         flight_status,
         flight_iata,
         arr_iata                            as airport_iata,
-        arr_airport                         as airport_name,
         arr_delay_minutes,
         dep_iata                            as origin_iata,
-        dep_airport                         as origin_airport,
-        airline_name,
         airline_iata,
         arr_flight_category                 as weather_category,
         arr_temp_c,
@@ -29,7 +26,6 @@ with flights as (
 aggregated as (
     select
         airport_iata,
-        airport_name,
         flight_date,
         weather_category,
         count(*)                            as total_flights,
@@ -44,14 +40,12 @@ aggregated as (
     from flights
     group by
         airport_iata,
-        airport_name,
         flight_date,
         weather_category
 )
 
 select
     airport_iata,
-    airport_name,
     flight_date,
     weather_category,
     total_flights,

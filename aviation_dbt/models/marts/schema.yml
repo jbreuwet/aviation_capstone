@@ -46,3 +46,26 @@ models:
       - name: weather_severity_rank
         tests:
           - not_null
+  
+  - name: stg_positions
+    description: Deduplicated aircraft position snapshots from OpenSky Network
+    columns:
+      - name: icao24
+        tests:
+          - not_null
+      - name: position_timestamp
+        tests:
+          - not_null
+
+  - name: mart_airport_congestion
+    description: Aircraft congestion metrics by airport and hour window
+    columns:
+      - name: airport_iata
+        tests:
+          - not_null
+      - name: hour_window
+        tests:
+          - not_null
+      - name: aircraft_count
+        tests:
+          - not_null

@@ -32,14 +32,15 @@ def get_r2_client():
         region_name="auto",
     )
 
-def normalize_mixed_columns(df: pd.DataFrame):
-    """
-    Coerce any object columns with mixed types to string.
-    This preserves raw data while making it Parquet-compatible.
-    """
+def normalize_mixed_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Coerce any object columns with mixed types to string."""
     for col in df.select_dtypes(include="object").columns:
         if df[col].apply(type).nunique() > 1:
             logger.warning(f"Mixed types detected in column '{col}' — coercing to string")
+            df[col] = df[col].astype(str)
+    # Also cast known volatile AviationStack fields to string
+    for col in ["live", "aircraft"]:
+        if col in df.columns:
             df[col] = df[col].astype(str)
     return df
 

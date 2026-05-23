@@ -10,17 +10,17 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_PATH = PROJECT_ROOT / "src"
 
 
-@task(name="aviationstack-ingestion", retries=2, retry_delay_seconds=30)
-def run_aviationstack():
+@task(name="airlabs-ingestion", retries=2, retry_delay_seconds=30)
+def run_airlabs():
     logger = get_run_logger()
-    logger.info("Running AviationStack ingestion")
+    logger.info("Running AirLabs ingestion")
     result = subprocess.run(
-        [sys.executable, str(SRC_PATH / "ingestion" / "aviationstack_ingestion.py")],
+        [sys.executable, str(SRC_PATH / "ingestion" / "airlabs_ingestion.py")],
         capture_output=True, text=True,
         env={**os.environ, "PYTHONPATH": str(SRC_PATH)},
     )
     if result.returncode != 0:
-        raise RuntimeError(f"AviationStack ingestion failed:\n{result.stderr}")
+        raise RuntimeError(f"AirLabs ingestion failed:\n{result.stderr}")
     logger.info(result.stdout)
 
 
@@ -56,14 +56,15 @@ def run_noaa():
 def run_dbt():
     logger = get_run_logger()
     logger.info("Running dbt")
+    dbt_dir = str(PROJECT_ROOT / "aviation_dbt")
     result = subprocess.run(
         ["dbt", "run", "--profiles-dir", "."],
         capture_output=True, text=True,
-        cwd=str(PROJECT_ROOT / "dbt"),
+        cwd=dbt_dir,
         env={**os.environ},
     )
     if result.returncode != 0:
-        raise RuntimeError(f"dbt run failed:\n{result.stderr}")
+        raise RuntimeError(f"dbt run failed:\n STDERR:{result.stderr} \n STDOUT: {result.stdout}")
     logger.info(result.stdout)
 
 
@@ -71,10 +72,11 @@ def run_dbt():
 def run_dbt_test():
     logger = get_run_logger()
     logger.info("Running dbt test")
+    dbt_dir = str(PROJECT_ROOT / "aviation_dbt")
     result = subprocess.run(
         ["dbt", "test", "--profiles-dir", "."],
         capture_output=True, text=True,
-        cwd=str(PROJECT_ROOT / "dbt"),
+        cwd=dbt_dir,
         env={**os.environ},
     )
     if result.returncode != 0:
@@ -95,9 +97,9 @@ def run_ducklake_export():
     logger.info(result.stdout)
 
 
-@flow(name="ingest-aviationstack", log_prints=True)
-def aviationstack_flow():
-    run_aviationstack()
+@flow(name="ingest-airlabs", log_prints=True)
+def airlabs_flow():
+    run_airlabs()
     run_dbt()
     run_dbt_test()
     run_ducklake_export()
@@ -114,8 +116,8 @@ def noaa_flow():
 
 
 if __name__ == "__main__":
-    aviationstack_deployment = aviationstack_flow.to_deployment(
-        name="aviationstack-deployment",
+    airlabs_deployment = airlabs_flow.to_deployment(
+        name="airlabs-deployment",
         cron="0 * * * *",   # every 1 hours
     )
     opensky_deployment = opensky_flow.to_deployment(
@@ -127,4 +129,4 @@ if __name__ == "__main__":
         cron="*/30 * * * *",  # every 30 minutes
     )
 
-    serve(aviationstack_deployment, opensky_deployment, noaa_deployment)
+    serve(airlabs_deployment, opensky_deployment, noaa_deployment)

@@ -1,7 +1,7 @@
 -- models/marts/mart_flight_details.sql
 {{ config(
     materialized='external',
-    location='s3://{{ env_var("R2_BUCKET_NAME") }}/marts/flight_details',
+    location='s3://aviation-lakehouse/marts/flight_details',
     format='parquet'
 ) }}
 
@@ -11,17 +11,18 @@ select
     flight_iata,
     flight_number,
     dep_iata,
-    dep_airport,
     dep_scheduled,
     dep_actual,
     dep_delay_minutes,
     arr_iata,
-    arr_airport,
     arr_scheduled,
     arr_actual,
     arr_delay_minutes,
-    airline_name,
+    total_delay_minutes,
+    duration_minutes,
     airline_iata,
+    airline_icao,
+    aircraft_icao,
     arr_flight_category                     as weather_category,
     arr_temp_c,
     arr_wind_speed_knots,
