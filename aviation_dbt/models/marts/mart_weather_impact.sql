@@ -1,4 +1,3 @@
--- models/marts/mart_weather_impact.sql
 {{ config(
     materialized='external',
     location='s3://aviation-lakehouse/marts/weather_impact',

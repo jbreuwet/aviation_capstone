@@ -1,4 +1,3 @@
--- models/staging/stg_positions.sql
 with source as (
     select
         icao24,

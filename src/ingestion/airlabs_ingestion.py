@@ -1,4 +1,3 @@
-# src/ingestion/airlabs_ingestion.py
 import asyncio
 import httpx
 import os
@@ -15,8 +14,8 @@ BASE_URL = "https://airlabs.co/api/v9/schedules"
 
 AIRPORTS = ["EWR", "ORD", "SFO", "JFK", "LAX", "ATL", "DFW"]
 
-
-def enrich_flight(flight: dict, fetched_at: str) -> dict:
+# Metadata Enrichment
+def enrich_flight(flight, fetched_at):
     return {
         **flight,
         "_fetched_at": fetched_at,
@@ -24,7 +23,7 @@ def enrich_flight(flight: dict, fetched_at: str) -> dict:
     }
 
 
-async def fetch_flights(client: httpx.AsyncClient, iata: str, direction: str) -> list[dict]:
+async def fetch_flights(client, iata, direction):
     param_key = "arr_iata" if direction == "arr" else "dep_iata"
     params = {"api_key": API_KEY, param_key: iata}
     try:

@@ -58,7 +58,7 @@ def get_duckdb_connection():
     return conn
 
 
-def load_mart(conn: duckdb.DuckDBPyConnection, mart_name: str):
+def load_mart(conn, mart_name):
     path = f"s3://{R2_BUCKET_NAME}/marts/{mart_name}"
 
     logger.info(f"Loading mart_{mart_name} from R2")

@@ -1,0 +1,36 @@
+# models/staging/schema.yml
+version: 2
+
+models:
+  - name: stg_positions
+    description: Aircraft position snapshots from OpenSky Network
+    columns:
+      - name: icao24
+        tests:
+          - not_null
+      - name: position_timestamp
+        tests:
+          - not_null
+
+  - name: stg_flights
+    description: Deduplicated flight schedules from AirLabs API
+    columns:
+      - name: flight_iata
+        tests:
+          - not_null
+      - name: arr_iata
+        tests:
+          - not_null
+      - name: dep_iata
+        tests:
+          - not_null
+
+  - name: stg_weather
+    description: METAR weather observations from NOAA
+    columns:
+      - name: icao_id
+        tests:
+          - not_null
+      - name: obs_timestamp
+        tests:
+          - not_null

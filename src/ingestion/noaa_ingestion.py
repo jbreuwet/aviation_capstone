@@ -21,7 +21,8 @@ AIRPORTS = [
     "KDFW",  # Dallas Fort Worth
 ]
 
-def enrich_metar(record: dict, fetched_at: str):
+# Metadata Enrichment
+def enrich_metar(record, fetched_at):
     return {
         **record,
         "_fetched_at": fetched_at,
@@ -29,7 +30,7 @@ def enrich_metar(record: dict, fetched_at: str):
     }
 
 
-async def fetch_metars(client: httpx.AsyncClient):
+async def fetch_metars(client):
     ids = ",".join(AIRPORTS)
     params = {
         "ids": ids,

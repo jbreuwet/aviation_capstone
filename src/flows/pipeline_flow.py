@@ -57,14 +57,20 @@ def run_dbt():
     logger = get_run_logger()
     logger.info("Running dbt")
     dbt_dir = str(PROJECT_ROOT / "aviation_dbt")
+    env_path = PROJECT_ROOT / ".env"
+
+    from dotenv import dotenv_values
+    env_vars = dotenv_values(env_path)
+    env_vars = {k: v.strip("'").strip('"') for k, v in env_vars.items() if v}
+    
     result = subprocess.run(
         ["dbt", "run", "--profiles-dir", "."],
         capture_output=True, text=True,
         cwd=dbt_dir,
-        env={**os.environ},
+        env={**os.environ, **env_vars},
     )
     if result.returncode != 0:
-        raise RuntimeError(f"dbt run failed:\n STDERR:{result.stderr} \n STDOUT: {result.stdout}")
+        raise RuntimeError(f"dbt run failed:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
     logger.info(result.stdout)
 
 
@@ -73,14 +79,19 @@ def run_dbt_test():
     logger = get_run_logger()
     logger.info("Running dbt test")
     dbt_dir = str(PROJECT_ROOT / "aviation_dbt")
+
+    from dotenv import dotenv_values
+    env_vars = dotenv_values(PROJECT_ROOT / ".env")
+    env_vars = {k: v.strip("'").strip('"') for k, v in env_vars.items() if v}
+
     result = subprocess.run(
         ["dbt", "test", "--profiles-dir", "."],
         capture_output=True, text=True,
         cwd=dbt_dir,
-        env={**os.environ},
+        env={**os.environ, **env_vars},
     )
     if result.returncode != 0:
-        raise RuntimeError(f"dbt test failed:\n{result.stderr}")
+        raise RuntimeError(f"dbt test failed:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
     logger.info(result.stdout)
 
 @task(name="ducklake-export", retries=1, retry_delay_seconds=30)

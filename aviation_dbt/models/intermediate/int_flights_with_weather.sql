@@ -1,4 +1,3 @@
--- models/intermediate/int_flights_with_weather.sql
 with flights as (
     select
         flight_date,
@@ -44,9 +43,6 @@ weather as (
     from {{ ref('stg_weather') }}
 ),
 
--- Join weather to flights on arrival airport
--- NOAA uses ICAO codes (KEWR) while AviationStack uses IATA (EWR)
--- so we strip the leading K from the ICAO code to match
 flights_with_weather as (
     select
         f.flight_date,
@@ -69,7 +65,6 @@ flights_with_weather as (
         f.airline_icao,
         f.aircraft_icao,
 
-        -- weather at arrival airport
         w.obs_timestamp                         as arr_weather_obs_time,
         w.temp_c                                as arr_temp_c,
         w.dewpoint_c                            as arr_dewpoint_c,

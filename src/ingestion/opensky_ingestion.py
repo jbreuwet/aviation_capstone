@@ -1,6 +1,5 @@
 import asyncio
 import httpx
-import json
 import os
 from datetime import datetime, timezone
 from logger_config import setup_logger
@@ -42,17 +41,19 @@ STATE_VECTOR_FIELDS = [
     "position_source",
 ]
 
-def enrich_position(state_vector: list, fetched_at: str):
+# Metadata Enrichment
+def enrich_position(state_vector, fetched_at):
     return {
         **dict(zip(STATE_VECTOR_FIELDS, state_vector)),
         "_fetched_at": fetched_at,
         "_source": "opensky",
     }
 
-async def fetch_positions(client: httpx.AsyncClient):
+async def fetch_positions(client):
     username = os.getenv("OPENSKY_USERNAME")
     password = os.getenv("OPENSKY_PASSWORD")
     auth = (username, password) if username and password else None
+    
     try:
         response = await client.get(
             BASE_URL,

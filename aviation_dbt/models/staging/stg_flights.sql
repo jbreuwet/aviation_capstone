@@ -1,4 +1,3 @@
--- models/staging/stg_flights.sql
 with source as (
     select
         airline_iata,

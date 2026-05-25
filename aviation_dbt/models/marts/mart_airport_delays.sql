@@ -1,4 +1,3 @@
--- models/marts/mart_airport_delays.sql
 {{ config(
     materialized='external',
     location='s3://aviation-lakehouse/marts/airport_delays',

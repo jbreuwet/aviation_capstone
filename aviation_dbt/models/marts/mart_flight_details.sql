@@ -1,4 +1,3 @@
--- models/marts/mart_flight_details.sql
 {{ config(
     materialized='external',
     location='s3://aviation-lakehouse/marts/flight_details',

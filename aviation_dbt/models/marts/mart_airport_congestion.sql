@@ -1,4 +1,3 @@
--- models/marts/mart_airport_congestion.sql
 {{ config(
     materialized='external',
     location='s3://aviation-lakehouse/marts/airport_congestion',
@@ -32,7 +31,7 @@ positions as (
         fetched_at
     from {{ ref('stg_positions') }}
     where latitude is not null
-      and longitude is not null
+    and longitude is not null
 ),
 
 positions_with_airport as (
@@ -51,8 +50,8 @@ with_flags as (
         *,
         case
             when on_ground = false
-             and baro_altitude < 3000
-             and abs(vertical_rate) < 2.0
+            and baro_altitude < 3000
+            and abs(vertical_rate) < 2.0
             then true
             else false
         end                                 as possible_holding_pattern
