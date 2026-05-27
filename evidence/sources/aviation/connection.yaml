@@ -1,0 +1,5 @@
+# evidence/sources/aviation/connection.yaml
+name: aviation
+type: duckdb
+options:
+  filename: ':memory:'

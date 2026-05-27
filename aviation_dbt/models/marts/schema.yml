@@ -1,0 +1,61 @@
+# models/marts/schema.yml
+version: 2
+
+models:
+  - name: mart_airport_delays
+    description: Aggregated flight delay and cancellation metrics by airport, date and weather category
+    columns:
+      - name: airport_iata
+        tests:
+          - not_null
+      - name: flight_date
+        tests:
+          - not_null
+      - name: total_flights
+        tests:
+          - not_null
+      - name: cancellation_rate_pct
+        tests:
+          - not_null
+
+  - name: mart_flight_details
+    description: Row level flight details with weather conditions at arrival airport
+    columns:
+      - name: flight_date
+        tests:
+          - not_null
+      - name: arr_iata
+        tests:
+          - not_null
+      - name: airline_iata
+        tests:
+          - not_null
+
+  - name: mart_weather_impact
+    description: Flight data with weather severity ranking for correlation analysis
+    columns:
+      - name: airport_iata
+        tests:
+          - not_null
+      - name: flight_category
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['VFR', 'MVFR', 'IFR', 'LIFR']
+      - name: weather_severity_rank
+        tests:
+          - not_null
+
+  - name: mart_airport_congestion
+    description: Aircraft congestion metrics by airport and hour window
+    columns:
+      - name: airport_iata
+        tests:
+          - not_null
+      - name: hour_window
+        tests:
+          - not_null
+      - name: aircraft_count
+        tests:
+          - not_null
